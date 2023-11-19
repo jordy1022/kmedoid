@@ -7,6 +7,7 @@ from sklearn.metrics import silhouette_samples, silhouette_score
 from yellowbrick.cluster import SilhouetteVisualizer
 import matplotlib.pyplot as plt
 import seaborn as sns
+import io
 
 # Function to load data
 def load_data(file):
@@ -15,11 +16,40 @@ def load_data(file):
 
 # Sidebar
 st.sidebar.title("Menu")
-menu_select = st.sidebar.radio("Go to", ('Halaman Utama', 'Dataset', 'About'))
+menu_select = st.sidebar.radio("Go to", ('Halaman Utama','Eksperimen', 'Dataset', 'About'))
 
-# Main content
+# Menu Utama
 if menu_select == 'Halaman Utama':
     st.title('Halaman Utama')
+    # Pendahuluan
+    st.subheader("Pendahuluan")
+    st.write("Kalimantan, merupakan sebuah pulau yang luas dan beragam di Indonesia, terkenal akan keanekaragaman hayatinya dan ekosistem yang unik. Pulau ini mengalami berbagai fenomena meteorologi yang membentuk iklim dan pola cuaca. Dalam artikel ini, kita akan menjelajahi aspek-aspek meteorologi Kalimantan, mengeksplorasi faktor-faktor seperti curah hujan, variasi suhu, dan pengaruh iklim.")
+
+    st.subheader("Dinamika Suhu")
+    st.write("Iklim Khatulistiwa: Proksimitas Kalimantan dengan garis khatulistiwa berkontribusi pada iklim khatulistiwa pulau ini. Akibatnya, suhu cenderung relatif konsisten sepanjang tahun. Suhu siang biasanya berkisar antara 25°C hingga 33°C, memberikan lingkungan yang hangat dan lembab. Malam biasanya lebih sejuk tetapi tetap relatif lembut dibandingkan dengan daerah yang lebih jauh dari garis khatulistiwa.")
+    
+    st.subheader("Percobaan")
+    st.write("Pada penelitian ini dilakukan percobaan untuk mengelompokkan data menjadi clustering agar dapat lebih memahami pola data iklim di Pulau Kalimantan.")
+    st.write("Dari 24 Kota yang terdapat stasiun meteorologi di Pulau Kalimantan, hanya 17 kota yang dilakukan percobaan.")
+    df1 = load_data('Book1.xlsx')
+    st.write("Kota - kota yang digunakan adalah sebagai berikut :")
+    st.write(df1)
+    
+    st.subheader("Hasil")
+    st.write("Karena keterbatasan perangkat keras, penelitian hanya bisa menggunakan 6 parameter data saja. Parameter yang digunakan adalah temperatur minimum, maksimum, rata - rata, kelembapan, kecepatan angin maksimum, kecapatan angin rata - rata.")
+    st.write("Berikut adalah pola data tahunan dari 6 parameter yang digunakan dalam penelitian :")
+    st.image("Tahunan.jpg")
+    
+    st.write("Pola data setiap bulan yang dihasilkan dari penelitian adalah sebagai berikut : ")
+    st.image("Bulanan.jpg")
+    
+    st.write("Dari hasil penelitian didapatkan perbandingan pola data antar cluster. Perbandingan pola data antar cluster dapat dilihat pada gambar berikut : ")
+    st.image("Perbandingan.jpg")
+    
+    
+# Eksperimen
+elif menu_select == 'Eksperimen':
+    st.title('Eksperimen')
     uploaded_file = st.file_uploader("Upload Excel", type=["xls", "xlsx"])
     if uploaded_file is not None:
         df = load_data(uploaded_file)
@@ -143,9 +173,23 @@ if menu_select == 'Halaman Utama':
 elif menu_select == 'Dataset':
     st.title('Dataset')
     df = load_data('Final16.xlsx')
-    st.write("Original Dataset:")
+    st.write("Dataset yang digunakan sebaiknya merupakan dataset yang telah melalui proses agregasi fitur. Berikut adalah susunan dari dataset yang baik untuk digunakan dalam eksperimen")
     st.write(df)
+    
+     # Create a buffer to store the Excel file
+    excel_buffer = io.BytesIO()
 
+    # Save the DataFrame to the buffer as an Excel file
+    df.to_excel(excel_buffer, index=False, engine="openpyxl")
+
+  # Create a download button
+    st.download_button(
+        label="Unduh Dataset (XLSX)",
+        data=excel_buffer,
+        file_name="Final16.xlsx",
+        key="download_button"
+    )
+    
 elif menu_select == 'About':
     st.title('About')
     st.write('This is a Streamlit application for KMedoids clustering.')
