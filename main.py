@@ -14,6 +14,7 @@ def load_data(file):
     data = pd.read_excel(file, engine='openpyxl')  # Use engine='openpyxl' for reading .xlsx files
     return data
 
+    
 # Sidebar
 st.sidebar.title("Menu")
 menu_select = st.sidebar.radio("Go to", ('Halaman Utama','Eksperimen', 'Dataset', 'About'))
@@ -37,16 +38,26 @@ if menu_select == 'Halaman Utama':
     
     st.subheader("Hasil")
     st.write("Karena keterbatasan perangkat keras, penelitian hanya bisa menggunakan 6 parameter data saja. Parameter yang digunakan adalah temperatur minimum, maksimum, rata - rata, kelembapan, kecepatan angin maksimum, kecapatan angin rata - rata.")
-    st.write("Berikut adalah pola data tahunan dari 6 parameter yang digunakan dalam penelitian :")
-    st.image("Tahunan.jpg")
+    st.write("Data yang ingin ditampilkan dapat dipilih dari menu dibawah ini : ")
     
-    st.write("Pola data setiap bulan yang dihasilkan dari penelitian adalah sebagai berikut : ")
-    st.image("Bulanan.jpg")
-    
-    st.write("Dari hasil penelitian didapatkan perbandingan pola data antar cluster. Perbandingan pola data antar cluster dapat dilihat pada gambar berikut : ")
-    st.image("Perbandingan.jpg")
-    
-    
+    # Dropdown untuk memilih cluster
+    selected_cluster = st.selectbox("Silahkan Pilih Cluster atau Perbandingan", ["Cluster 1", "Cluster 2", "Perbandingan"])
+      # Menampilkan penjelasan sesuai dengan gambar yang dipilih
+    if selected_cluster == "Cluster 1" or selected_cluster == "Cluster 2":
+        selected_rg = st.selectbox("Pilih Tren Waktu", ["Tahunan", "Bulanan"])
+        selected_pr = st.selectbox("Pilih Parameter", ["Temperatur Minimum", "Temperatur Maksimum", "Temperatur Rata - Rata", "Kelembapan Rata - Rata", "Kecepatan Angin Maksimum", "Kecepatan Angin Rata - Rata"])
+
+        cluster_number = selected_cluster[-1]
+        trend_suffix = selected_rg.lower()[0]
+        image_path = f"C{cluster_number}{trend_suffix}_{selected_pr.lower()}.jpg" if selected_rg == "Bulanan" else f"C{cluster_number}_{selected_pr.lower()}.jpg"
+        st.subheader(f"Berikut adalah pola data tren {selected_rg.lower()} {selected_pr}")
+        st.image(image_path)
+
+    elif selected_cluster == "Perbandingan":
+        selected_prp = st.selectbox("Pilih Parameter", ["Temperatur Minimum", "Temperatur Maksimum", "Temperatur Rata - Rata", "Kelembapan Rata - Rata", "Kecepatan Angin Maksimum", "Kecepatan Angin Rata - Rata"])
+        image_path = f"P{selected_prp.lower()}.jpg"
+        st.subheader(f"Berikut adalah perbandingan pola data tren tahunan {selected_prp}")
+        st.image(image_path)
 # Eksperimen
 elif menu_select == 'Eksperimen':
     st.title('Eksperimen')
