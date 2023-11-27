@@ -14,6 +14,70 @@ def load_data(file):
     data = pd.read_excel(file, engine='openpyxl')  # Use engine='openpyxl' for reading .xlsx files
     return data
 
+# Function to perform clustering and display plots
+def perform_clustering(df2, data, n_clusters, random_state, max_iter, method_options, display_scatter_plot, display_line_plot, display_heatmap):
+    kmedoids = KMedoids(n_clusters=n_clusters, random_state=random_state, max_iter=max_iter, method=method_options).fit(data)
+    ClusLabel = kmedoids.labels_
+
+    # Visualisasi Silhouette
+    st.subheader("Visualisasi Silhouette")
+    Visual = SilhouetteVisualizer(kmedoids, colors='yellowbrick')
+    Visual.fit(data, ClusLabel)
+    st.pyplot(plt.gcf())
+
+    # Rata-rata Silhouette Score
+    rata_silhouette = silhouette_score(data, ClusLabel)
+    st.write(f'Nilai Rata-Rata Silhouette dengan {n_clusters} Cluster : ', rata_silhouette)
+
+    # DataFrame dengan Cluster Labels
+    df2_labeled = df2.copy()
+    df2_labeled['Cluster'] = ClusLabel
+
+    # Tampilkan hanya kolom 'Cluster' pada dataset
+    st.subheader("Label")
+    cluster_column = df2_labeled['Cluster']
+    st.write(cluster_column)
+
+    # Display scatter plot based on user choice
+    if display_scatter_plot:
+        st.subheader("Scatter Plot")
+        plt.figure(figsize=(10, 8))
+        for i in range(n_clusters):
+            plt.scatter(data[ClusLabel == i, 0], data[ClusLabel == i, 1], label=f'Cluster {i + 1}')
+        plt.scatter(kmedoids.cluster_centers_[:, 0], kmedoids.cluster_centers_[:, 1], s=100, c='black', marker='x',
+                    label='Medoids')
+        plt.title('Scatter Plot of Clusters')
+        plt.legend()
+        st.pyplot(plt.gcf())
+
+    # Display line plot based on user choice
+    if display_line_plot:
+        st.subheader("Line Plot of Clusters")
+        for i in range(n_clusters):
+            cluster_indices = np.where(ClusLabel == i)[0]
+            cluster_data = df.to_numpy()[cluster_indices]
+
+            # Sorting the data for plotting
+            sorted_indices = np.argsort(cluster_data[:, 0])
+            sorted_cluster_data = cluster_data[sorted_indices]
+
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.plot(sorted_cluster_data[:, 0], marker='o', linestyle='-', label=f'Cluster {i + 1}', linewidth=2, markersize=8)
+            ax.set_xlabel('Sorted Data Points', fontsize=12)
+            ax.set_ylabel('Feature 1', fontsize=12)
+            ax.legend(fontsize=12)
+            ax.grid(True, linestyle='--', alpha=0.5)
+            plt.xticks(fontsize=10)
+            plt.yticks(fontsize=10)
+            plt.subplots_adjust(wspace=0.3, hspace=0.5)
+            st.pyplot(fig)
+
+    # Display correlation heatmap based on user choice
+    if display_heatmap:
+        st.subheader("Correlation Heatmap")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.heatmap(df.corr(), annot=True, cmap='coolwarm', fmt='.2f', ax=ax)
+        st.pyplot(fig)
     
 # Sidebar
 st.sidebar.title("Menu")
@@ -81,68 +145,21 @@ elif menu_select == 'Eksperimen':
 
         # KMedoids method option
         method_options = st.selectbox("Metode KMedoids", ["pam", "alternate"])
-        kmedoids = KMedoids(n_clusters=n_clusters, random_state=random_state, max_iter=max_iter, method=method_options).fit(data)
-        ClusLabel = kmedoids.labels_
-        nilai_silhouette = silhouette_samples(data, ClusLabel)
 
-        # Visualisasi Silhouette
-        st.subheader("Visualisasi Silhouette")
-        Visual = SilhouetteVisualizer(kmedoids, colors='yellowbrick')
-        Visual.fit(data)
-        st.pyplot(plt.gcf())
+        # Add a checkbox for choosing which plots to display
+        display_scatter_plot = st.checkbox("Tampilkan Scatter Plot", value=True)
+        display_line_plot = st.checkbox("Tampilkan Line Plot", value=True)
+        display_heatmap = st.checkbox("Tampilkan Heatmap Korelasi", value=True)
 
-        # Rata-rata Silhouette Score
-        rata_silhouette = silhouette_score(data, ClusLabel)
-        st.write(f'Nilai Rata-Rata Silhouette dengan {n_clusters} Cluster : ', rata_silhouette)
+        # Add a button to initiate clustering
+        if st.button("Mulai Clustering"):
+            perform_clustering(df2, data, n_clusters, random_state, max_iter, method_options, display_scatter_plot, display_line_plot, display_heatmap)
 
-        # DataFrame dengan Cluster Labels
-        df2_labeled = df2.copy()
-        df2_labeled['Cluster'] = ClusLabel
+        # Reset the checkbox values after clustering
+        display_scatter_plot = False
+        display_line_plot = False
+        display_heatmap = False
 
-        # Tampilkan hanya kolom 'Cluster' pada dataset
-        st.subheader("Kota dan Cluster")
-        cluster_column = df2_labeled['Cluster']
-        st.write(cluster_column)
-
-        # Scatter plot
-        st.subheader("Scatter Plot")
-        plt.figure(figsize=(10, 8))
-        for i in range(n_clusters):
-            plt.scatter(data[ClusLabel == i, 0], data[ClusLabel == i, 1], label=f'Cluster {i + 1}')
-        plt.scatter(kmedoids.cluster_centers_[:, 0], kmedoids.cluster_centers_[:, 1], s=100, c='black', marker='x',
-                    label='Medoids')
-        plt.title('Scatter Plot of Clusters')
-        plt.xlabel('Feature 1')
-        plt.ylabel('Feature 2')
-        plt.legend()
-        st.pyplot(plt.gcf())
-
-        # Line plot for clusters
-        st.subheader("Line Plot of Clusters")
-        for i in range(n_clusters):
-            cluster_indices = np.where(ClusLabel == i)[0]
-            cluster_data = df.to_numpy()[cluster_indices]
-
-            # Sorting the data for plotting
-            sorted_indices = np.argsort(cluster_data[:, 0])
-            sorted_cluster_data = cluster_data[sorted_indices]
-
-            fig, ax = plt.subplots(figsize=(10, 6))
-            ax.plot(sorted_cluster_data[:, 0], marker='o', linestyle='-', label=f'Cluster {i + 1}', linewidth=2, markersize=8)
-            ax.set_xlabel('Sorted Data Points', fontsize=12)
-            ax.set_ylabel('Feature 1', fontsize=12)
-            ax.legend(fontsize=12)
-            ax.grid(True, linestyle='--', alpha=0.5)
-            plt.xticks(fontsize=10)
-            plt.yticks(fontsize=10)
-            plt.subplots_adjust(wspace=0.3, hspace=0.5)
-            st.pyplot(fig)
-
-        # Display correlation heatmap
-        st.subheader("Correlation Heatmap")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.heatmap(df.corr(), annot=True, cmap='coolwarm', fmt='.2f', ax=ax)
-        st.pyplot(fig)
 
        # # Interaktif dengan Pemilihan Fitur
         # st.subheader("Analisis Berdasarkan Fitur")
@@ -183,7 +200,7 @@ elif menu_select == 'Eksperimen':
 
 elif menu_select == 'Dataset':
     st.title('Dataset')
-    df = load_data('Final16.xlsx')
+    df = load_data('Tanpa time series.xlsx')
     st.write("Dataset yang digunakan sebaiknya merupakan dataset yang telah melalui proses agregasi fitur. Berikut adalah susunan dari dataset yang baik untuk digunakan dalam eksperimen")
     st.write(df)
     
@@ -197,10 +214,19 @@ elif menu_select == 'Dataset':
     st.download_button(
         label="Unduh Dataset (XLSX)",
         data=excel_buffer,
-        file_name="Final16.xlsx",
+        file_name="Template.xlsx",
         key="download_button"
     )
     
 elif menu_select == 'About':
     st.title('About')
-    st.write('This is a Streamlit application for KMedoids clustering.')
+    st.write('Situs ini merupakan implementasi dari tugas akhir mahasiswa tarumanagara, dengan judul Clustering Data Meteorologi di Pulau Kalimantan Menggunakan Metode K-Medoids')
+
+    # Add your personal information
+    st.subheader('DATA DIRI')
+    st.image('profil.jpg', width=150)  # Replace 'your_profile_picture_url_or_path' with the actual URL or path to your profile picture
+    st.write('**Name:** Jordi Pradipta Kusuma')
+    st.write('**NIM :** 535190052')
+    st.write('**Jurusan :** Teknik Informatika')
+    st.write('**Fakultas :** Teknologi Informasi')
+
