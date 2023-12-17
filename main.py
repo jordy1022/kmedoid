@@ -113,13 +113,13 @@ if menu_select == 'Halaman Utama':
 
         cluster_number = selected_cluster[-1]
         trend_suffix = selected_rg.lower()[0]
-        image_path = f"C{cluster_number}{trend_suffix}_{selected_pr.lower()}.jpg" if selected_rg == "Bulanan" else f"C{cluster_number}_{selected_pr.lower()}.jpg"
+        image_path = f"C{cluster_number}{trend_suffix}_{selected_pr.lower()}.png" if selected_rg == "Bulanan" else f"C{cluster_number}_{selected_pr.lower()}.png"
         st.subheader(f"Berikut adalah pola data tren {selected_rg.lower()} {selected_pr}")
         st.image(image_path)
 
     elif selected_cluster == "Perbandingan":
         selected_prp = st.selectbox("Pilih Parameter", ["Temperatur Minimum", "Temperatur Maksimum", "Temperatur Rata - Rata", "Kelembapan Rata - Rata", "Kecepatan Angin Maksimum", "Kecepatan Angin Rata - Rata"])
-        image_path = f"P{selected_prp.lower()}.jpg"
+        image_path = f"P{selected_prp.lower()}.png"
         st.subheader(f"Berikut adalah perbandingan pola data tren tahunan {selected_prp}")
         st.image(image_path)
 # Eksperimen
